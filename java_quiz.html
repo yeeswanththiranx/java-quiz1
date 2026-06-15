@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java Quiz – First Java Program</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --card: #1c2330;
+    --border: #30363d;
+    --java-orange: #f89820;
+    --java-red: #e76f51;
+    --accent: #58a6ff;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --red-err: #f85149;
+    --radius: 10px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #1a1000 0%, #0d1117 60%);
+    border-bottom: 1px solid var(--border);
+    padding: 36px 24px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(248,152,32,.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.6rem;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--java-orange);
+    line-height: 1;
+  }
+  .logo span { color: var(--java-red); }
+  header p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: .9rem;
+    letter-spacing: .04em;
+  }
+
+  /* ── PROGRESS ── */
+  #progress-wrap {
+    max-width: 720px;
+    margin: 28px auto 0;
+    padding: 0 24px;
+  }
+  .prog-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: .78rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .prog-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 9px;
+    overflow: hidden;
+  }
+  .prog-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--java-orange), var(--java-red));
+    border-radius: 9px;
+    transition: width .4s ease;
+    width: 0%;
+  }
+
+  /* ── QUIZ CONTAINER ── */
+  #quiz-wrap {
+    max-width: 720px;
+    margin: 32px auto 0;
+    padding: 0 24px;
+  }
+
+  /* ── QUESTION CARD ── */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 28px 22px;
+    display: none;
+    animation: fadeUp .35s ease forwards;
+  }
+  .q-card.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .72rem;
+    background: rgba(248,152,32,.15);
+    color: var(--java-orange);
+    border: 1px solid rgba(248,152,32,.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+  .q-type {
+    font-size: .72rem;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+  }
+
+  .q-text {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.55;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  /* code block */
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem;
+    line-height: 1.7;
+    color: #c9d1d9;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .kw  { color: #ff7b72; }
+  .typ { color: #79c0ff; }
+  .str { color: #a5d6ff; }
+  .cm  { color: #8b949e; }
+
+  /* ── OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px 16px;
+    cursor: pointer;
+    transition: border-color .18s, background .18s;
+    user-select: none;
+  }
+  .opt:hover:not(.locked) { border-color: var(--java-orange); background: rgba(248,152,32,.06); }
+  .opt.selected { border-color: var(--accent); background: rgba(88,166,255,.08); }
+  .opt.correct  { border-color: var(--green);  background: rgba(63,185,80,.1); }
+  .opt.wrong    { border-color: var(--red-err);background: rgba(248,81,73,.1); }
+
+  .opt-radio {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: border-color .18s, background .18s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opt.selected .opt-radio { border-color: var(--accent); }
+  .opt.correct  .opt-radio { border-color: var(--green);  background: var(--green); }
+  .opt.wrong    .opt-radio { border-color: var(--red-err);background: var(--red-err); }
+  .opt-radio::after {
+    content: '';
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #fff;
+    display: none;
+  }
+  .opt.selected .opt-radio::after,
+  .opt.correct  .opt-radio::after,
+  .opt.wrong    .opt-radio::after { display: block; }
+
+  .opt-label { font-size: .92rem; flex: 1; }
+
+  /* fill-in-blank */
+  .fill-wrap { display: flex; gap: 10px; align-items: center; }
+  .fill-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .9rem;
+    outline: none;
+    transition: border-color .18s;
+  }
+  .fill-input:focus { border-color: var(--java-orange); }
+  .fill-input.correct { border-color: var(--green); background: rgba(63,185,80,.08); }
+  .fill-input.wrong   { border-color: var(--red-err); background: rgba(248,81,73,.08); }
+
+  /* ── EXPLANATION ── */
+  .explanation {
+    display: none;
+    margin-top: 14px;
+    background: rgba(88,166,255,.07);
+    border: 1px solid rgba(88,166,255,.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: .85rem;
+    color: #c9d1d9;
+    line-height: 1.6;
+  }
+  .explanation.show { display: block; }
+  .explanation strong { color: var(--accent); }
+
+  /* ── BUTTONS ── */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: var(--java-orange); color: #000; }
+  .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── SCORE CARD ── */
+  #result-card {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    text-align: center;
+    animation: fadeUp .4s ease forwards;
+  }
+  .score-ring {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    border: 6px solid var(--java-orange);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+  }
+  .score-num { font-family: 'JetBrains Mono', monospace; font-size: 2rem; font-weight: 700; color: var(--java-orange); }
+  .score-den { font-size: .78rem; color: var(--muted); }
+  #result-card h2 { font-size: 1.4rem; margin-bottom: 8px; }
+  #result-card p  { color: var(--muted); font-size: .9rem; margin-bottom: 24px; }
+  .stat-row { display: flex; justify-content: center; gap: 24px; margin-bottom: 28px; }
+  .stat { text-align: center; }
+  .stat-val { font-family: 'JetBrains Mono', monospace; font-size: 1.4rem; font-weight: 700; }
+  .stat-lbl { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+  .stat.green .stat-val { color: var(--green); }
+  .stat.red   .stat-val { color: var(--red-err); }
+
+  @media (max-width: 500px) {
+    .logo { font-size: 1.8rem; }
+    .q-card { padding: 20px 16px 16px; }
+    .btn { padding: 9px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Java<span>.quiz()</span></div>
+  <p>First Java Program — Concepts &amp; Code</p>
+</header>
+
+<div id="progress-wrap">
+  <div class="prog-label">
+    <span id="prog-text">Question 1 of 15</span>
+    <span id="prog-pct">0%</span>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+</div>
+
+<div id="quiz-wrap">
+  <!-- cards injected by JS -->
+  <div id="result-card">
+    <div class="score-ring">
+      <div class="score-num" id="sc-num">0</div>
+      <div class="score-den" id="sc-den">/ 15</div>
+    </div>
+    <h2 id="result-title">Quiz Complete!</h2>
+    <p id="result-msg"></p>
+    <div class="stat-row">
+      <div class="stat green"><div class="stat-val" id="st-correct">0</div><div class="stat-lbl">Correct</div></div>
+      <div class="stat red"><div class="stat-val" id="st-wrong">0</div><div class="stat-lbl">Wrong</div></div>
+      <div class="stat"><div class="stat-val" id="st-pct" style="color:var(--java-orange)">0%</div><div class="stat-lbl">Score</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="restartQuiz()">Try Again</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  // ── BASIC / CONCEPTUAL ──────────────────────────────────────────
+  {
+    type: 'mcq',
+    text: 'What is Java?',
+    options: [
+      'A hardware description language',
+      'A platform-independent, object-oriented programming language',
+      'A database management system',
+      'An operating system'
+    ],
+    answer: 1,
+    explanation: 'Java is a high-level, class-based, object-oriented programming language designed to have as few implementation dependencies as possible (Write Once, Run Anywhere).'
+  },
+  {
+    type: 'mcq',
+    text: 'What does JVM stand for?',
+    options: ['Java Virtual Machine', 'Java Verified Module', 'Java Variable Manager', 'Java Version Manager'],
+    answer: 0,
+    explanation: 'JVM (Java Virtual Machine) is an abstract computing machine that enables a Java program to run on any platform without modification.'
+  },
+  {
+    type: 'mcq',
+    text: 'What does JDK stand for and what is it used for?',
+    options: [
+      'Java Debug Kit — used to debug Java programs',
+      'Java Development Kit — used to develop and run Java applications',
+      'Java Deployment Kit — used to deploy Java applications',
+      'Java Data Kit — used to manage data in Java'
+    ],
+    answer: 1,
+    explanation: 'JDK (Java Development Kit) provides the full environment to develop, compile, debug, and run Java applications. It includes the JRE plus development tools like the compiler (javac).'
+  },
+  {
+    type: 'fill',
+    text: 'Fill in the blank: The ________ provides the environment to develop and run any application.',
+    answer: 'JDK',
+    alternates: ['jdk', 'Java Development Kit'],
+    explanation: 'The JDK (Java Development Kit) provides all tools necessary to develop and run Java applications, including the compiler, debugger, and the JRE.'
+  },
+  {
+    type: 'tf',
+    text: 'Platform consists of Operating system and its associated hardware. State True or False.',
+    options: ['True', 'False'],
+    answer: 0,
+    explanation: 'True. A platform in computing context refers to the combination of the operating system and the underlying hardware on which software runs.'
+  },
+  // ── JDK / JRE / JVM MCQ ─────────────────────────────────────────
+  {
+    type: 'mcq',
+    text: 'Which among the following statements is FALSE?',
+    options: [
+      'JDK provides all the necessary tools to develop and run any Java application',
+      'JDK = Development tools + JRE',
+      'JRE contains JVM, class libraries, and other supporting files',
+      'JRE does not contain development tools',
+      'Each Java application runs inside its own instance of JVM',
+      'JRE alone is sufficient to run any Java Program',
+      'None of the above'
+    ],
+    answer: 5,
+    explanation: 'FALSE: "JRE alone is sufficient to run any Java Program." While JRE can run pre-compiled Java programs, if you need to compile source code, you also need the JDK. Additionally, JRE alone is insufficient for programs that require development-time tools.'
+  },
+  // ── CODE OUTPUT QUESTIONS ────────────────────────────────────────
+  {
+    type: 'mcq',
+    text: 'What is the output of the following code snippet upon execution?\n\npublic class First {\n    public static void Main(String[] s) {\n        System.out.println("Java");\n    }\n}',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public static void</span> Main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+    }
+}`,
+    options: ['Java', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 2,
+    explanation: 'Java\'s entry point must be named <strong>main</strong> (lowercase). Here it is <strong>Main</strong> (capital M), so the code compiles fine but the JVM cannot find the entry point at runtime and throws: <em>"Main method not found in class First"</em> — a <strong>Runtime Error</strong>.'
+  },
+  {
+    type: 'mcq',
+    text: 'What is the output of the following code snippet upon execution?\n\npublic class First {\n    static void main(String[] s) {\n        System.out.println("Java");\n    }\n}',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">static void</span> main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+    }
+}`,
+    options: ['Java', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 2,
+    explanation: 'The main method must be declared <strong>public static void main</strong>. Here <strong>public</strong> is missing. The code compiles successfully, but at runtime the JVM cannot find the required entry point signature and throws: <em>"Main method not found in class First"</em> — a <strong>Runtime Error</strong>.'
+  },
+  {
+    type: 'mcq',
+    text: 'What is the output of the following code snippet upon execution?\n\npublic class First {\n    public void Main(String[] s) {\n        System.out.println("Java");\n    }\n}',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public void</span> Main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+    }
+}`,
+    options: ['Java', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 2,
+    explanation: 'Two problems: the method name is <strong>Main</strong> (not main) and <strong>static</strong> is missing. The code compiles fine, but the JVM cannot locate a valid entry point at runtime and throws: <em>"Main method not found in class First"</em> — a <strong>Runtime Error</strong>.'
+  },
+  {
+    type: 'mcq',
+    text: 'What is the output of the following code snippet upon execution?\n\npublic class First {\n    public static int main(String[] s) {\n        System.out.println("Java");\n    }\n}',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public static int</span> main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+        <span class="cm">// missing return statement</span>
+    }
+}`,
+    options: ['Java', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 1,
+    explanation: 'Return type must be <strong>void</strong>. Using <strong>int</strong> and not returning a value causes a <strong>Compiler Error</strong> ("missing return statement").'
+  },
+  {
+    type: 'mcq',
+    text: 'What is the output of the following code snippet upon execution?\n\npublic class First {\n    public static int main(String[] s) {\n        System.out.println("Java");\n        return 0;\n    }\n}',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public static int</span> main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+        <span class="kw">return</span> 0;
+    }
+}`,
+    options: ['Java', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 2,
+    explanation: 'With <strong>return 0</strong> present, this compiles successfully (return type matches). However, the JVM looks specifically for <strong>public static void main(String[])</strong>. Since the return type is <strong>int</strong> not <strong>void</strong>, the JVM cannot find the entry point at runtime and throws: <em>"Main method not found in class First"</em> — a <strong>Runtime Error</strong>.'
+  },
+  {
+    type: 'mcq',
+    text: 'What is the output of the following code snippet upon execution?\n\npublic class First {\n    public static int main(int[] s) {\n        System.out.println("Java");\n        return 0;\n    }\n}',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public static int</span> main(<span class="kw">int</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+        <span class="kw">return</span> 0;
+    }
+}`,
+    options: ['Java', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 2,
+    explanation: 'The parameter is <strong>int[]</strong> instead of <strong>String[]</strong>, and the return type is <strong>int</strong> not <strong>void</strong>. This compiles fine (it is just a regular method), but the JVM cannot find the required entry point signature at runtime and throws: <em>"Main method not found in class First"</em> — a <strong>Runtime Error</strong>.'
+  },
+  {
+    type: 'mcq',
+    text: 'What is the output? (Two methods both named main with String[] parameter — duplicate method)',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public static void</span> main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+    }
+    <span class="kw">public static void</span> main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java Script"</span>);
+    }
+}`,
+    options: ['Java', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 1,
+    explanation: 'You cannot have two methods with the exact same signature in the same class. This results in a <strong>Compiler Error</strong> ("method is already defined").'
+  },
+  {
+    type: 'mcq',
+    text: 'What is the output? (main with String[] and main with int[] — method overloading)',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public static void</span> main(<span class="typ">String</span>[] s) {
+        System.out.println(<span class="str">"Java"</span>);
+    }
+    <span class="kw">public static void</span> main(<span class="kw">int</span>[] s) {
+        System.out.println(<span class="str">"Java Script"</span>);
+    }
+}`,
+    options: ['Java', 'Java Script', 'Compiler Error', 'Runtime Error', 'No output'],
+    answer: 0,
+    explanation: 'This is valid <strong>method overloading</strong>. The JVM calls the entry point <strong>main(String[] args)</strong>, so the output is <strong>Java</strong>. The second overloaded version is never called automatically.'
+  },
+  // ── TRUE / FALSE ─────────────────────────────────────────────────
+  {
+    type: 'tf',
+    text: '\'main\' method can be overloaded but cannot be overridden. State True or False.',
+    options: ['True', 'False'],
+    answer: 0,
+    explanation: 'True. The main method can be overloaded (same name, different parameters) and you can write multiple versions. However, since it is static, it cannot truly be overridden (static methods are hidden, not overridden).'
+  },
+  {
+    type: 'tf',
+    text: 'The purpose of command line arguments is to provide a way to pass input data to the program when it is executed. State True or False.',
+    options: ['True', 'False'],
+    answer: 0,
+    explanation: 'True. Command-line arguments are passed to the main method as String[] args, allowing users to supply input values at program launch without modifying the source code.'
+  },
+  {
+    type: 'fill',
+    text: 'What is the output of the following code upon execution?\n\npublic class First {\n    public static void main(String[] s) {\n        System.out.println(s.length);\n    }\n}\n\n(Assume the program is run without any command-line arguments)',
+    code: `<span class="kw">public class</span> <span class="typ">First</span> {
+    <span class="kw">public static void</span> main(<span class="typ">String</span>[] s) {
+        System.out.println(s.length);
+    }
+}`,
+    answer: '0',
+    alternates: ['0'],
+    explanation: 'When no command-line arguments are passed, the String[] array is empty (length = 0). So the output is <strong>0</strong>.'
+  },
+];
+
+let current = 0;
+let score = 0;
+let answered = new Array(questions.length).fill(false);
+let userAnswers = new Array(questions.length).fill(null);
+
+function buildQuiz() {
+  const wrap = document.getElementById('quiz-wrap');
+  questions.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'q-card' + (i === 0 ? ' active' : '');
+    card.id = 'q-' + i;
+
+    const typeLabel = q.type === 'tf' ? 'True / False' : q.type === 'fill' ? 'Fill in the Blank' : 'Multiple Choice';
+    let html = `<div class="q-meta"><span class="q-num">Q${i+1}</span><span class="q-type">${typeLabel}</span></div>`;
+
+    // Question text (strip code from text display if code block present)
+    const displayText = q.code ? q.text.split('\n\n')[0] : q.text;
+    html += `<div class="q-text">${displayText.replace(/\n/g,'<br>')}</div>`;
+
+    if (q.code) html += `<div class="code-block">${q.code}</div>`;
+
+    if (q.type === 'fill') {
+      html += `<div class="options"><div class="fill-wrap">
+        <input class="fill-input" id="fill-${i}" placeholder="Type your answer…" autocomplete="off" onkeydown="if(event.key==='Enter')checkFill(${i})">
+      </div></div>`;
+    } else {
+      html += `<div class="options">`;
+      q.options.forEach((opt, j) => {
+        html += `<div class="opt" id="opt-${i}-${j}" onclick="selectOpt(${i},${j})">
+          <div class="opt-radio"></div>
+          <span class="opt-label">${opt}</span>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<div class="explanation" id="exp-${i}"><strong>Explanation:</strong> ${q.explanation}</div>`;
+
+    html += `<div class="btn-row">`;
+    if (q.type === 'fill') {
+      html += `<button class="btn btn-primary" id="check-${i}" onclick="checkFill(${i})">Check Answer</button>`;
+    }
+    html += `<button class="btn btn-ghost" id="next-${i}" onclick="nextQ()" style="display:none">${i === questions.length-1 ? 'See Results' : 'Next Question →'}</button>`;
+    html += `</div>`;
+
+    card.innerHTML = html;
+    wrap.insertBefore(card, document.getElementById('result-card'));
+  });
+  updateProgress();
+}
+
+function selectOpt(qi, oi) {
+  if (answered[qi]) return;
+  const q = questions[qi];
+  // clear previous selection
+  q.options.forEach((_, j) => document.getElementById(`opt-${qi}-${j}`).classList.remove('selected'));
+  document.getElementById(`opt-${qi}-${oi}`).classList.add('selected');
+  userAnswers[qi] = oi;
+
+  // lock & reveal
+  answered[qi] = true;
+  q.options.forEach((_, j) => {
+    const el = document.getElementById(`opt-${qi}-${j}`);
+    el.classList.add('locked');
+    if (j === q.answer) el.classList.add('correct');
+  });
+  if (oi !== q.answer) {
+    document.getElementById(`opt-${qi}-${oi}`).classList.remove('selected');
+    document.getElementById(`opt-${qi}-${oi}`).classList.add('wrong');
+  } else {
+    score++;
+  }
+  document.getElementById(`exp-${qi}`).classList.add('show');
+  document.getElementById(`next-${qi}`).style.display = 'inline-block';
+}
+
+function checkFill(qi) {
+  if (answered[qi]) return;
+  const inp = document.getElementById(`fill-${qi}`);
+  const val = inp.value.trim();
+  if (!val) return;
+  const q = questions[qi];
+  const correct = [q.answer, ...(q.alternates||[])].map(a => a.toLowerCase());
+  answered[qi] = true;
+  inp.disabled = true;
+  document.getElementById(`check-${qi}`).disabled = true;
+  if (correct.includes(val.toLowerCase())) {
+    inp.classList.add('correct');
+    score++;
+  } else {
+    inp.classList.add('wrong');
+    inp.value = val + '  ✗  Correct: ' + q.answer;
+  }
+  document.getElementById(`exp-${qi}`).classList.add('show');
+  document.getElementById(`next-${qi}`).style.display = 'inline-block';
+}
+
+function nextQ() {
+  document.getElementById('q-' + current).classList.remove('active');
+  current++;
+  if (current >= questions.length) {
+    showResult(); return;
+  }
+  document.getElementById('q-' + current).classList.add('active');
+  updateProgress();
+}
+
+function updateProgress() {
+  const pct = Math.round((current / questions.length) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-text').textContent = `Question ${current+1} of ${questions.length}`;
+  document.getElementById('prog-pct').textContent = pct + '%';
+}
+
+function showResult() {
+  document.getElementById('prog-fill').style.width = '100%';
+  document.getElementById('prog-pct').textContent = '100%';
+  const rc = document.getElementById('result-card');
+  rc.style.display = 'block';
+  document.getElementById('sc-num').textContent = score;
+  document.getElementById('sc-den').textContent = '/ ' + questions.length;
+  const wrong = questions.length - score;
+  const pct = Math.round((score / questions.length) * 100);
+  document.getElementById('st-correct').textContent = score;
+  document.getElementById('st-wrong').textContent = wrong;
+  document.getElementById('st-pct').textContent = pct + '%';
+  const msgs = [
+    [0,  39,  'Keep practicing — every Java master started here! 💪'],
+    [40, 59,  'Getting there! Review the main method rules carefully.'],
+    [60, 79,  'Good job! You have a solid grasp of Java basics.'],
+    [80, 99,  'Excellent! You really know your JDK/JRE/JVM concepts.'],
+    [100,100, 'Perfect score! You\'re a Java champion! ☕🏆']
+  ];
+  const m = msgs.find(([lo,hi]) => pct >= lo && pct <= hi);
+  document.getElementById('result-title').textContent = pct === 100 ? '🏆 Perfect Score!' : pct >= 80 ? '🎉 Great Work!' : pct >= 60 ? '👍 Well Done!' : '📚 Keep Studying!';
+  document.getElementById('result-msg').textContent = m[2];
+}
+
+function restartQuiz() {
+  current = 0; score = 0;
+  answered.fill(false);
+  userAnswers.fill(null);
+  document.getElementById('result-card').style.display = 'none';
+  document.querySelectorAll('.q-card').forEach((c,i) => {
+    c.classList.toggle('active', i === 0);
+  });
+  // reset inputs & classes
+  questions.forEach((q,i) => {
+    document.getElementById(`exp-${i}`).classList.remove('show');
+    document.getElementById(`next-${i}`).style.display = 'none';
+    if (q.type === 'fill') {
+      const inp = document.getElementById(`fill-${i}`);
+      inp.value = ''; inp.disabled = false;
+      inp.classList.remove('correct','wrong');
+      document.getElementById(`check-${i}`).disabled = false;
+    } else {
+      q.options.forEach((_,j) => {
+        const el = document.getElementById(`opt-${i}-${j}`);
+        el.className = 'opt';
+      });
+    }
+  });
+  updateProgress();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>
